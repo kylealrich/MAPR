@@ -1,0 +1,53 @@
+Source Field Name (Inbound),FSM Field Name,Size,Type,Remarks
+,CashManagementGroup,,,HardCoded = AHF
+,CashLedgerPaymentImport.RunGroup,,,PREFMMDDYY
+H. CVI-CASH-CODE,CashLedgerPaymentImport.CashCode,,,See mapping below table
+,CashLedgerPaymentImport.BankTransactionCode,,,HardCoded = PAR
+H. CVI-COUNTRY,CashLedgerPaymentImport.ReferenceNumber,,,Include leading zeroes
+,CashLedgerPaymentImport.SequenceNumber,,,Starts 1 with increment of 1
+,CommentText,,,Blank
+,PayablesData.PayablesCompany,,,HardCoded = 10
+,PayablesData.Vendor,,,HardCoded = 123
+,PayablesData.PayGroup,,,HardCoded = AHF
+H. CVI-POSTING-STATUS,Status,,,0 – Unreleased
+,,,,1 – Released
+H. CVI-INVOICE-DTE,TransactionDate,,,MM/DD/YYYY
+H. CVI-DESCRIPTION,Description,,,
+H. CVI-VENDOR-VNAME,PayeeName,,,
+H. CVI-INVOICE,MailingName,,,
+,PayeePostalAddress.Country,,,Hard Coded = US
+H. CVI-ADDR1,PayeePostalAddress.DeliveryAddress.AddressLine1,,,
+H. CVI-ADDR2,PayeePostalAddress.DeliveryAddress.AddressLine2,,,
+H. CVI-ADDR3,PayeePostalAddress.DeliveryAddress.AddressLine3,,,
+H. CVI-ADDR4,PayeePostalAddress.DeliveryAddress.AddressLine4,,,
+H. CVI-CITY-ADDR5,PayeePostalAddress.Municipality,,,
+H. CVI-STATE-PROV,PayeePostalAddress.StateProvince,,,
+H. CVI-POSTAL-CODE,PayeePostalAddress.PostalCode,,,
+H. CVI-COUNTY,PayeePostalAddress.County,,,
+,PayeePostalAddress.Type,,,HardCoded = 2
+H. CVI-INV-CURRENCY,BankCurrency,,,
+H. CVI-TRAN-INV-AMT,DistributionAmount,,,
+,Reference,,,Blank
+,TaxCode,,,Blank
+,TaxableBankAmount,,,Blank
+,GeneralLedgerSourceCode,,,HardCoded = AP
+,ProcessLevel,,,HardCoded = 10PA
+,TaxID,,,Blank
+,ReportableIncomeAmount,,,
+,TaxIDType,,,
+,PayTaxExempt,,,
+,DistributionAccount.Ledger,,,HardCoded = CORE
+L. CVD-DIST-COMPANY,DistributionAccount.ToAccountingEntity,,,Remove leading zeroes. Must be 2 digit
+L. CVD-DIS-ACCOUNT,DistributionAccount.GeneralLedgerChartAccount,,,
+L. CVD-ACTIVITY,DistributionAccount.Project,,,
+L. CVD-DIS-ACCT-UNIT,DistributionAccount.FinanceDimension1,,,
+,DistributionAccount.FinanceDimension2,,,
+L. CVD-ACCT-CATEGORY,DistributionAccount.FinanceDimension3,,,
+,DistributionAccount.FinanceDimension4,,,
+,DistributionAccount.FinanceDimension9,,,
+,DistributionAccount.FinanceDimension10,,,
+,InterfaceAsPosted,,,FALSE
+H. CVI-VENDOR-VNAME,PayeeFirstName,,,
+,PayeeMiddleName,,,
+,EmailAddress,,,
+,UnitsAmount,,,
