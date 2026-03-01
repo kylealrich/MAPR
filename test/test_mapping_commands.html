@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapping Commands Test</title>
+</head>
+<body>
+    <h1>Mapping Commands Test Results</h1>
+    <div id="results"></div>
+
+    <script>
+        // Copy the applyLogic function from the main file
+        function applyLogic(logic, data, field) {
+          if (!logic) return null;
+          logic = logic.trim();
+
+          // String Functions
+          if (/^RemoveLeadingZeroes\(/i.test(logic)) {
+            var col = logic.match(/Column(\d+)/i);
+            if (col) return (data[col[1]-1] || '').replace(/^0+/, '') || '0';
+          }
+          if (/^RemoveTrailingSpaces\(/i.test(logic)) {
+            var col = logic.match(/Column(\d+)/i);
+            if (col) return (data[col[1]-1] || '').replace(/\s+$/, '');
+          }
+          if (/^Trim\(/i.test(logic)) {
+            var col = logic.match(/Trim\(Column(\d+)\)/i);
+            if (col) {
+              var value = data[col[1]-1];
+              if (value === null || value === undefined) return '';
+              return value.toString().trim();
+            }
+          }
+          if (/^Concat\(/i.test(logic)) {
+            var cols = logic.match(/Column(\d+)/gi);
+            if (cols) return cols.map(function(c) { var n = c.match(/\d+/)[0]; return data[n-1] || ''; }).join('');
+          }
+          if (/^Substring\(/i.test(logic)) {
+            var match = logic.match(/Substring\(Column(\d+),\s*(\d+),\s*(\d+)\)/i);
+            if (match) return (data[match[1]-1] || '').substring(parseInt(match[2]), parseInt(match[2]) + parseInt(match[3]));
+          }
+          if (/^Uppercase\(/i.test(logic)) {
+            var col = logic.match(/Column(\d+)/i);
+            if (col) return (data[col[1]-1] || '').toUpperCase();
+          }
+          if (/^Lowercase\(/i.test(logic)) {
+            var col = logic.match(/Column(\d+)/i);
+            if (col) return (data[col[1]-1] || '').toLowerCase();
+          }
+          if (/^Left\(/i.test(logic)) {
+            var match = logic.match(/Left\(Column(\d+),\s*(\d+)\)/i);
+            if (match) return (data[match[1]-1] || '').substring(0, parseInt(match[2]));
+          }
+          if (/^Right\(/i.test(logic)) {
+            var match = logic.match(/Right\(Column(\d+),\s*(\d+)\)/i);
+            if (match) return (data[match[1]-1] || '').slice(-parseInt(match[2]));
+          }
+          if (/^Replace\(/i.test(logic)) {
+            var match = logic.match(/Replace\(Column(\d+),\s*'([^']*)',\s*'([^']*)'\)/i);
+            if (match) return (data[match[1]-1] || '').replace(new RegExp(match[2], 'g'), match[3]);
+          }
+
+          // Math Functions
+          if (/^Sum\(/i.test(logic)) {
+            var cols = logic.match(/Column(\d+)/gi);
+            if (cols) {
+              var sum = 0;
+              cols.forEach(function(col) {
+                var n = col.match(/\d+/)[0];
+                var val = data[n - 1] || '0';
+                if (!/^-?\d*\.?\d+$/.test(val.toString().trim())) throw new Error('Non-numeric value in Sum: ' + val);
+                sum += parseFloat(val);
+              });
+              return sum;
+            }
+          }
+
+          // Increment By 1 functionality
+          if (/^Increment By 1$/i.test(logic)) {
+            if (typeof incrementCounter === 'undefined') incrementCounter = 0;
+            incrementCounter++;
+            return incrementCounter;
+          }
+          
+          // Hardcode functionality
+          if (/^Hardcode\s+['"](.*)['"]$/i.test(logic)) {
+            var match = logic.match(/^Hardcode\s+['"](.*)['"]$/i);
+            return match[1];
+          }
+
+          if (/^DateReformat\(/i.test(logic)) {
+            var match = logic.match(/DateReformat\(Column(\d+),\s*'([^']*)',\s*'([^']*)'\)/i);
+            if (match) {
+              var dateStr = data[match[1]-1] || '';
+              var inputFormat = match[2].toUpperCase();
+              var outputFormat = match[3].toUpperCase();
+              if (inputFormat === 'MMDDYYYY' && outputFormat === 'YYYYMMDD' && dateStr.length === 8) {
+                return dateStr.substring(4, 8) + dateStr.substring(0, 4);
+              }
+              return dateStr;
+            }
+          }
+
+          // Conditional Logic
+          if (/^If\s/i.test(logic)) {
+            var simpleMatch = logic.match(/If\s+([^!=<>]+)\s*(==?|!=|>|<|>=|<=)\s*'?([^'\s]*)'?\s+Then\s+'?([^'\s]+)'?(?:\s+ElseIf\s+([^!=<>]+)\s*(==?|!=|>|<|>=|<=)\s*'?([^'\s]*)'?\s+Then\s+'?([^'\s]+)'?)*(?:\s+Else\s+'?([^'\s]+)'?)?/i);
+            if (simpleMatch) {
+              var conditionRef = simpleMatch[1].trim().replace(/Column(\d+)/gi, function(_, n) { return data[n - 1] || ''; });
+              var operator = simpleMatch[2];
+              var compareValue = simpleMatch[3];
+              var thenResult = simpleMatch[4].replace(/Column(\d+)/gi, function(_, n) { return data[n - 1] || ''; });
+              var elseResult = simpleMatch[9] ? simpleMatch[9].replace(/Column(\d+)/gi, function(_, n) { return data[n - 1] || ''; }) : '';
+              
+              var condition = false;
+              if (operator === '==' || operator === '=') condition = conditionRef == compareValue;
+              else if (operator === '!=') condition = conditionRef != compareValue;
+              else if (operator === '>') condition = parseFloat(conditionRef) > parseFloat(compareValue);
+              else if (operator === '<') condition = parseFloat(conditionRef) < parseFloat(compareValue);
+              else if (operator === '>=') condition = parseFloat(conditionRef) >= parseFloat(compareValue);
+              else if (operator === '<=') condition = parseFloat(conditionRef) <= parseFloat(compareValue);
+              
+              return condition ? thenResult : elseResult;
+            }
+          }
+
+          // Column references
+          var colMatch = logic.match(/^Column(\d+)$/i);
+          if (colMatch) {
+            return data[colMatch[1] - 1] || '';
+          }
+
+          return null;
+        }
+
+        // Test data
+        var testData = ['10252025BLU4', '1', '100', '001020027', '1000080000', 'NL', '10252025BLU', 'AMBULATORY', 'Cash', 'USD', ' ', '457.66', '457.66', '', '', '', 'N', '10252025'];
+
+        // Test cases
+        var tests = [
+            // String Functions
+            { name: 'RemoveLeadingZeroes', logic: 'RemoveLeadingZeroes(Column3)', expected: '100' },
+            { name: 'Trim with space', logic: 'Trim(Column11)', expected: '' },
+            { name: 'Left function', logic: 'Left(Column5,6)', expected: '100008' },
+            { name: 'Right function', logic: 'Right(Column4,5)', expected: '20027' },
+            { name: 'Uppercase', logic: 'Uppercase(Column6)', expected: 'NL' },
+            { name: 'Lowercase', logic: 'Lowercase(Column8)', expected: 'ambulatory' },
+            
+            // Math Functions
+            { name: 'Sum', logic: 'Sum(Column2, Column3)', expected: 101 },
+            
+            // Hardcode
+            { name: 'Hardcode string', logic: "Hardcode '1'", expected: '1' },
+            { name: 'Hardcode zero', logic: "Hardcode '0'", expected: '0' },
+            
+            // Date Reformat
+            { name: 'DateReformat', logic: "DateReformat(Column18,'MMDDYYYY','YYYYMMDD')", expected: '20251025' },
+            
+            // Conditional Logic
+            { name: 'If empty then default', logic: "If Column6 == '' Then 'TC' Else Column6", expected: 'NL' },
+            { name: 'If empty then default (empty case)', logic: "If Column14 == '' Then 'GL' Else Column14", expected: 'GL' },
+            
+            // Column Reference
+            { name: 'Direct column', logic: 'Column1', expected: '10252025BLU4' },
+            
+            // Increment
+            { name: 'Increment By 1 (first)', logic: 'Increment By 1', expected: 1 },
+            { name: 'Increment By 1 (second)', logic: 'Increment By 1', expected: 2 }
+        ];
+
+        // Run tests
+        var results = [];
+        var passed = 0;
+        var failed = 0;
+
+        tests.forEach(function(test) {
+            try {
+                var result = applyLogic(test.logic, testData, 'test');
+                var success = result == test.expected;
+                
+                results.push({
+                    name: test.name,
+                    logic: test.logic,
+                    expected: test.expected,
+                    actual: result,
+                    success: success
+                });
+                
+                if (success) passed++;
+                else failed++;
+            } catch (e) {
+                results.push({
+                    name: test.name,
+                    logic: test.logic,
+                    expected: test.expected,
+                    actual: 'ERROR: ' + e.message,
+                    success: false
+                });
+                failed++;
+            }
+        });
+
+        // Display results
+        var html = '<h2>Test Summary: ' + passed + ' passed, ' + failed + ' failed</h2>';
+        html += '<table border="1" style="border-collapse: collapse; width: 100%;">';
+        html += '<tr><th>Test</th><th>Logic</th><th>Expected</th><th>Actual</th><th>Status</th></tr>';
+        
+        results.forEach(function(result) {
+            var color = result.success ? 'lightgreen' : 'lightcoral';
+            html += '<tr style="background-color: ' + color + ';">';
+            html += '<td>' + result.name + '</td>';
+            html += '<td>' + result.logic + '</td>';
+            html += '<td>' + result.expected + '</td>';
+            html += '<td>' + result.actual + '</td>';
+            html += '<td>' + (result.success ? 'PASS' : 'FAIL') + '</td>';
+            html += '</tr>';
+        });
+        
+        html += '</table>';
+        document.getElementById('results').innerHTML = html;
+    </script>
+</body>
+</html>

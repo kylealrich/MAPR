@@ -1,0 +1,34 @@
+S No.,Target (VendorImport business class),Input/source file,Remarks,Type,Size,Required
+1,VendorGroup,VendorGroup,HardCoded = “AHF”,,,Y
+,,-1,,,,
+2,VendorImport.Vendor,,Blank (system generated),,,
+3,VendorImport.OldVendor,VendorName,Truncate to 20,,20,Y
+,,-2,,,,
+4,RunGroup,,VENYYYYMMDDHHmm,,,Y
+5,NewVendor,,Blank,,,
+,,,,,,
+6,VendorClass,VendorClass,Include = TRD,,5,Y
+,,-3,,,,
+7,VendorName,VendorName,,ALPHALOWER,120,
+,,-2,,,,
+8,ContactName,ContactName,,ALPHALOWER,120,
+,,-13,,,,
+9,VendorStatus,,HardCoded = “A”,,,
+10,PhoneNumber.SubscriberNumber,-14,,ALPHALOWER,15,
+11,TermsCode,-19,,,,
+12,TaxID,-4,,ALPHAUPPER,25,Y
+13,TaxIDType,-5,,,,Y
+14,BankTransactionCode,-20,,,,
+15,EmailAddress,-16,,ALPHALOWER,256,
+16,HoldCode,-21,,,,
+17,PostalAddress.Country,-12,"If blank, default to US",,,Y
+18,PostalAddress.DeliveryAddress.AddressLine1,-6,,ALPHALOWER,40,Y
+19,PostalAddress.DeliveryAddress.AddressLine2,-7,,ALPHALOWER,40,
+20,PostalAddress.DeliveryAddress.AddressLine3,,Blank,,,
+21,PostalAddress.DeliveryAddress.AddressLine4,,Blank,,,
+22,PostalAddress.Municipality,-8,,ALPHALOWER,58,Y
+23,PostalAddress.StateProvince,-10,,ALPHAUPPER,3,Y
+24,PostalAddress.PostalCode,-11,,ALPHALOWER,12,Y
+25,PostalAddress.County,-9,,ALPHALOWER,30,Y
+26,AHVendorServiceType, (17),User Field in FSM both in VendorImport and Vendor Business class,ALPHAUPPER,30,
+27,VendorAccount,-18,,ALPHAUPPER,30,
