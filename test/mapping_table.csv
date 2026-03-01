@@ -1,8 +1,0 @@
-TargetTableName,TargetFieldName,Required,InputColumnNumber,MappingLogic,SampleValue
-GLT,GroupNum,Y,1,,
-GLT,Company,Y,2,RemoveLeadingZeroes(Column2),
-GLT,Division ,Y,3,Trim(Column3),
-GLT,AmountX,Y,4,,
-GLT,Description,N,,'Test',
-GLT,AmountY,Y,5,,
-GLT,SumField,Y,,"Sum(Column4, Column5)",
