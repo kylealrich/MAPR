@@ -1,181 +1,223 @@
-// Generated Mapper for Cerner GL Transaction Processing
-// Generated: 2026-03-03
-// Input File: CernerGLTrans_20251025.txt
-// Mapping File: CernerGL_MappingTable.csv
+// Cerner GL Transaction Mapper - Self Contained
+// Generated for: CernerGLTrans_20251025.txt
+// Mapping Configuration: CernerGL_MappingTable.csv
+// Generation Type: Self Contained (Static)
+// Generated: 2026-03-04
 
-// Global counter for Increment By 1 functionality
+// Global counter for auto-increment fields
 var incrementCounter = 0;
 
-// CSV Parser
+// CSV Parser Function
 function parseCSV(text, delimiter) {
-  var lines = text.split(/\r?\n/).filter(function(l) { return l.trim() !== ''; });
-  return lines.map(function(line) {
-    var result = [];
+  var lines = text.split(/\r?\n/);
+  var result = [];
+  
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (!line || line.trim() === '') continue;
+    
+    var row = [];
     var current = '';
     var inQuotes = false;
-    for (var i = 0; i < line.length; i++) {
-      var char = line[i];
+    
+    for (var j = 0; j < line.length; j++) {
+      var char = line[j];
+      var nextChar = line[j + 1];
+      
       if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
+        if (inQuotes && nextChar === '"') {
           current += '"';
-          i++;
+          j++;
         } else {
           inQuotes = !inQuotes;
         }
       } else if (char === delimiter && !inQuotes) {
-        result.push(current);
+        row.push(current);
         current = '';
       } else {
         current += char;
       }
     }
-    result.push(current);
-    return result;
-  });
+    row.push(current);
+    result.push(row);
+  }
+  
+  return result;
 }
 
-// Key Normalizer
-function normalizeKey(key) {
-  return key.replace(/\s+/g, '').trim().toLowerCase();
+// Transformation Functions
+function removeLeadingZeroes(value) {
+  if (!value) return '';
+  var trimmed = value.toString().trim();
+  return trimmed.replace(/^0+/, '') || '0';
 }
 
-// Apply Logic Function
-function applyLogic(logic, data, field, rowIndex) {
-  if (!logic) return null;
-  logic = logic.trim();
-  
-  if (/^Increment By 1$/i.test(logic)) {
-    incrementCounter++;
-    return incrementCounter;
-  }
-  
-  if (/^Hardcode\s+['"](.*)['"]$/i.test(logic)) {
-    var match = logic.match(/^Hardcode\s+['"](.*)['"]$/i);
-    return match[1];
-  }
+function leftSubstring(value, length) {
+  if (!value) return '';
+  return value.toString().substring(0, length);
+}
 
-  if (/^RemoveLeadingZeroes\(/i.test(logic)) {
-    var col = logic.match(/Column(\d+)/i);
-    if (col) return (data[col[1]-1] || '').replace(/^0+/, '') || '0';
-  }
-  
-  if (/^Trim\(/i.test(logic)) {
-    var col = logic.match(/Column(\d+)/i);
-    if (col) return (data[col[1]-1] || '').trim();
-  }
-  
-  if (/^Left\(/i.test(logic)) {
-    var match = logic.match(/Left\(Column(\d+),\s*(\d+)\)/i);
-    if (match) return (data[match[1]-1] || '').substring(0, parseInt(match[2]));
-  }
-  
-  if (/^Right\(/i.test(logic)) {
-    var match = logic.match(/Right\(Column(\d+),\s*(\d+)\)/i);
-    if (match) return (data[match[1]-1] || '').slice(-parseInt(match[2]));
-  }
+function rightSubstring(value, length) {
+  if (!value) return '';
+  var str = value.toString();
+  return str.substring(str.length - length);
+}
 
-  if (/^If\s/i.test(logic)) {
-    var simpleMatch = logic.match(/If\s+([^!=<>]+)\s*(==?|!=|>|<|>=|<=)\s*'?([^'\s]*)'?\s+Then\s+'?([^'\s]+)'?(?:\s+Else\s+'?([^'\s]+)'?)?/i);
-    if (simpleMatch) {
-      var conditionRef = simpleMatch[1].trim();
-      if (/Column(\d+)/i.test(conditionRef)) {
-        var colNum = conditionRef.match(/Column(\d+)/i)[1];
-        conditionRef = data[colNum - 1] || '';
-      }
-      var operator = simpleMatch[2];
-      var compareValue = simpleMatch[3];
-      var thenResult = simpleMatch[4];
-      var elseResult = simpleMatch[5] || '';
-      
-      if (/Column(\d+)/i.test(thenResult)) {
-        var colNum = thenResult.match(/Column(\d+)/i)[1];
-        thenResult = data[colNum - 1] || '';
-      }
-      if (/Column(\d+)/i.test(elseResult)) {
-        var colNum = elseResult.match(/Column(\d+)/i)[1];
-        elseResult = data[colNum - 1] || '';
-      }
-      
-      var condition = false;
-      if (operator === '==' || operator === '=') condition = conditionRef == compareValue;
-      else if (operator === '!=') condition = conditionRef != compareValue;
-      
-      return condition ? thenResult : elseResult;
+function dateReformat(dateStr, inputFormat, outputFormat) {
+  if (!dateStr || dateStr.trim() === '') return '';
+  
+  var cleaned = dateStr.toString().trim();
+  
+  if (inputFormat === 'MMDDYYYY' && outputFormat === 'YYYYMMDD') {
+    if (cleaned.length === 8) {
+      return cleaned.substring(4, 8) + cleaned.substring(0, 2) + cleaned.substring(2, 4);
     }
   }
-
-  if (/^DateReformat\(/i.test(logic)) {
-    var match = logic.match(/DateReformat\(Column(\d+),\s*'([^']*)',\s*'([^']*)'\)/i);
-    if (match) {
-      var dateStr = data[match[1]-1] || '';
-      var inputFormat = match[2].toUpperCase();
-      var outputFormat = match[3].toUpperCase();
-      
-      if (inputFormat === 'MMDDYYYY' && outputFormat === 'YYYYMMDD' && dateStr.length === 8) {
-        return dateStr.substring(4, 8) + dateStr.substring(0, 4);
-      }
-      return dateStr;
-    }
-  }
-
-  var colMatch = logic.match(/^Column(\d+)$/i);
-  if (colMatch) {
-    return data[colMatch[1] - 1] || '';
-  }
-
-  return null;
+  
+  return cleaned;
 }
 
-// Main Mapper Function
-function mapCernerGLTransaction(inputData) {
-  incrementCounter = 0;
+// Main Mapping Function
+function mapRecord(data) {
+  var record = {};
+  
+  // Reset increment counter at start of each record
+  incrementCounter++;
+  
+  try {
+    // FinanceEnterpriseGroup - Hardcode '1'
+    record.FinanceEnterpriseGroup = '1';
+    
+    // GLTransactionInterface.RunGroup - Column 1
+    record['GLTransactionInterface.RunGroup'] = (data[0] || '').trim();
+    
+    // GLTransactionInterface.SequenceNumber - Increment By 1
+    record['GLTransactionInterface.SequenceNumber'] = incrementCounter.toString();
+    
+    // AccountingEntity - RemoveLeadingZeroes(Column3)
+    record.AccountingEntity = removeLeadingZeroes(data[2] || '');
+    
+    // Status - Hardcode '0'
+    record.Status = '0';
+    
+    // ToAccountingEntity - Column 3
+    record.ToAccountingEntity = (data[2] || '').trim();
+    
+    // AccountCode - Left(Column5,6)
+    record.AccountCode = leftSubstring(data[4] || '', 6);
+    
+    // GeneralLedgerEvent - If Column6 == '' Then 'TC' Else Column6
+    var col6 = (data[5] || '').trim();
+    record.GeneralLedgerEvent = (col6 === '') ? 'TC' : col6;
+    
+    // JournalCode - Trim(Column16)
+    record.JournalCode = (data[15] || '').trim();
+    
+    // TransactionDate - DateReformat(Column18,'MMDDYYYY','YYYYMMDD')
+    record.TransactionDate = dateReformat(data[17] || '', 'MMDDYYYY', 'YYYYMMDD');
+    
+    // Reference - Column 8
+    record.Reference = (data[7] || '').trim();
+    
+    // Description - Column 9
+    record.Description = (data[8] || '').trim();
+    
+    // CurrencyCode - Column 10
+    record.CurrencyCode = (data[9] || '').trim();
+    
+    // UnitsAmount - '0'
+    record.UnitsAmount = '0';
+    
+    // TransactionAmount - Column 12
+    record.TransactionAmount = (data[11] || '').trim();
+    
+    // System - If Column15 == '' Then 'GL' Else Column15
+    var col15 = (data[14] || '').trim();
+    record.System = (col15 === '') ? 'GL' : col15;
+    
+    // AutoReverse - If Column17 == '' Then 'N' Else Column17
+    var col17 = (data[16] || '').trim();
+    record.AutoReverse = (col17 === '') ? 'N' : col17;
+    
+    // PostingDate - DateReformat(Column18,'MMDDYYYY','YYYYMMDD')
+    record.PostingDate = dateReformat(data[17] || '', 'MMDDYYYY', 'YYYYMMDD');
+    
+    // Project - Column 19
+    record.Project = (data[18] || '').trim();
+    
+    // FinanceDimension1 - Right(Column4,3)
+    record.FinanceDimension1 = rightSubstring(data[3] || '', 3);
+    
+    // FinanceDimension3 - Column 20
+    record.FinanceDimension3 = (data[19] || '').trim();
+    
+    // DocumentNumber - Column 21
+    record.DocumentNumber = (data[20] || '').trim();
+    
+  } catch (error) {
+    throw new Error('Error mapping record: ' + error.message);
+  }
+  
+  return record;
+}
+
+// Process File Function
+function processFile(fileContent) {
+  var rows = parseCSV(fileContent, ',');
   var results = [];
   
-  for (var i = 0; i < inputData.length; i++) {
-    var data = inputData[i];
-    var record = {};
-    
-    record['FinanceEnterpriseGroup'] = '1';
-    record['GLTransactionInterface.RunGroup'] = data[0] || '';
-    record['GLTransactionInterface.SequenceNumber'] = (function() { incrementCounter++; return incrementCounter; })();
-    record['AccountingEntity'] = (data[2] || '').replace(/^0+/, '') || '0';
-    record['Status'] = '0';
-    record['ToAccountingEntity'] = data[2] || '';
-    record['AccountCode'] = (data[4] || '').substring(0, 6);
-    record['GeneralLedgerEvent'] = (data[5] || '') == '' ? 'TC' : data[5] || '';
-    record['JournalCode'] = (data[15] || '').trim();
-    record['TransactionDate'] = (function() {
-      var dateStr = data[17] || '';
-      if (dateStr.length === 8) return dateStr.substring(4, 8) + dateStr.substring(0, 4);
-      return dateStr;
-    })();
-    record['Reference'] = data[7] || '';
-    record['Description'] = data[8] || '';
-    record['CurrencyCode'] = data[9] || '';
-    record['UnitsAmount'] = '0';
-    record['TransactionAmount'] = data[11] || '';
-    record['System'] = (data[14] || '') == '' ? 'GL' : data[14] || '';
-    record['AutoReverse'] = (data[16] || '') == '' ? 'N' : data[16] || '';
-    record['PostingDate'] = (function() {
-      var dateStr = data[17] || '';
-      if (dateStr.length === 8) return dateStr.substring(4, 8) + dateStr.substring(0, 4);
-      return dateStr;
-    })();
-    record['Project'] = data[18] || '';
-    record['FinanceDimension1'] = (data[3] || '').slice(-3);
-    record['FinanceDimension3'] = data[19] || '';
-    record['DocumentNumber'] = data[20] || '';
-    
-    results.push(record);
+  // Reset increment counter
+  incrementCounter = 0;
+  
+  // Skip header rows (0 rows specified)
+  var startRow = 0;
+  
+  for (var i = startRow; i < rows.length; i++) {
+    try {
+      var mappedRecord = mapRecord(rows[i]);
+      results.push(mappedRecord);
+    } catch (error) {
+      console.error('Error processing row ' + (i + 1) + ': ' + error.message);
+    }
   }
   
   return results;
 }
 
+// Generate CSV Output
+function generateCSV(records) {
+  if (records.length === 0) return '';
+  
+  var headers = Object.keys(records[0]);
+  var csvLines = [headers.join(',')];
+  
+  records.forEach(function(record) {
+    var row = headers.map(function(header) {
+      var value = record[header] != null ? record[header].toString() : '';
+      if (/[",\n]/.test(value)) {
+        value = '"' + value.replace(/"/g, '""') + '"';
+      }
+      return value;
+    });
+    csvLines.push(row.join(','));
+  });
+  
+  return csvLines.join('\n');
+}
+
 // Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    parseCSV: parseCSV,
-    mapCernerGLTransaction: mapCernerGLTransaction
+    processFile: processFile,
+    generateCSV: generateCSV,
+    mapRecord: mapRecord,
+    parseCSV: parseCSV
   };
 }
+
+// Example usage:
+// var fs = require('fs');
+// var fileContent = fs.readFileSync('input/CernerGLTrans_20251025.txt', 'utf8');
+// var records = processFile(fileContent);
+// var csvOutput = generateCSV(records);
+// fs.writeFileSync('output/CernerGLTrans_Mapped_20251025.csv', csvOutput);
