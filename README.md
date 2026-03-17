@@ -110,10 +110,6 @@ PadLeft(Column1, 10, '0')                        → Left-pad to 10 chars
 Split(Column2, ' ', 1)                           → Split and take part
 ```
 
-## Browser Compatibility
-
-Chrome 60+, Firefox 55+, Safari 12+, Edge 79+. JavaScript must be enabled. No server required.
-
 ## Technology Stack
 
 - Vanilla JavaScript (ES5) — no frameworks, no build tools
