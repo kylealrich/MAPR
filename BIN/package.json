@@ -1,0 +1,17 @@
+{
+  "name": "mapper-cli",
+  "version": "1.0.0",
+  "description": "JavaScript Mapper CLI - Generate Mapper JS (Khaz) as standalone .exe",
+  "main": "mapper-cli.js",
+  "bin": "mapper-cli.js",
+  "pkg": {
+    "targets": ["node18-win-x64"],
+    "outputPath": "."
+  },
+  "scripts": {
+    "build": "npx pkg mapper-cli.js --targets node18-win-x64 --output MapperCLI.exe",
+    "start": "node mapper-cli.js"
+  },
+  "author": "Khaz",
+  "license": "ISC"
+}
