@@ -19,17 +19,6 @@ Built for data analysts, healthcare IT teams, and integration engineers who need
 - **Auto-detection** of delimiter and header rows
 - **Drag-and-drop** file upload
 
-### 25+ Transformation Functions
-
-| Category | Functions |
-|---|---|
-| String | `Trim`, `Concat`, `Substring`, `Uppercase`, `Lowercase`, `Left`, `Right`, `Replace`, `PadLeft`, `PadRight`, `AddLeft`, `AddRight`, `RemoveLeadingZeroes`, `RemoveTrailingSpaces`, `Split` |
-| Math | `Sum`, `Multiply`, `Divide`, `Round`, `Abs`, `Max`, `Min` |
-| Date | `DateReformat`, `Today`, `Now` |
-| Conditional | `If...Then...Else`, `If...ElseIf...Else`, comparison operators (`==`, `!=`, `>`, `<`, `>=`, `<=`) |
-| Validation | `IsEmpty`, `IsNumeric`, `ValidateLength`, `ValidateRange`, `ValidateFormat` |
-| Static | `Hardcode 'value'`, `'literal'`, `Increment By 1`, `ColumnN` direct mapping |
-
 ### Code Generation Modes
 - **Static (Self-Contained)** — mapping rules embedded in generated JS, no external files needed at runtime
 - **Dynamic (Runtime Flexible)** — universal mapper that reads a mapping CSV at runtime
