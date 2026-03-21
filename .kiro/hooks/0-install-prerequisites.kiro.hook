@@ -7,7 +7,7 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "If the following doesn't exist in the system, download and install:\n1. Node.js\n2. Python"
+    "prompt": "If the following doesn't exist in the system, download and install:\n1. Node.js\n2. Python\n3. libreoffice\n4. pandoc\n5. soffice\n6. pdfplumber\n7. python-docx"
   },
   "workspaceFolderName": "MAPR",
   "shortName": "0-install-prerequisites"
