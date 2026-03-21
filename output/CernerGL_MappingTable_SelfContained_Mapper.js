@@ -1,7 +1,7 @@
 // Auto-generated Self Contained Mapper
-// Generated: 2026-03-21 22:53:18
+// Generated: 2026-03-21 22:51:48
 // Type: Delimited
-// Records: 645
+// Records: 23
 
 function mapRecord(data, rowIndex) {
   var record = {};
