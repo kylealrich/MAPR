@@ -70,3 +70,44 @@ inclusion: manual
 - Write a single Python script that extracts, analyzes, and determines file type in one pass.
 - Clean up all temp files after generation.
 - The `executePwsh` shell may be stuck from prior mapper runs — always use `controlPwshProcess` for shell commands.
+
+## SoNH CB Recon (INT_FIN_093) - Learnings (2026-03-21)
+
+### Document Structure
+- The SoNH CB Recon document uses a different table structure than Aultman Health docs.
+- The FSM field mapping table has headers: `FSM Field`, `Type`, `Field Size`, `Required Field?`, `Remarks`, `Sample Value`, `Bank Values /Fields`.
+- Row 1 is a merged header row ("CashLedgerBankUpdate Business Class") with a note — skip it.
+- Actual field rows start at Row 2.
+- The "Bank Values /Fields" column names the bank format field (e.g., "Account Number", "Dollar Amount", "Status Code", "Paid Date", "Check Serial Number").
+- There is NO separate bank format table with Start/End positions — positions must be derived from the sample record and extract sample table.
+
+### Fixed-Length Position Derivation
+- Sample record: `33118329320000262751R00000002873501092645236521` (47 chars)
+- Extract sample table (Table 15) lists field values in order without position info.
+- Derived positions:
+  - Account Number: pos 1-10 (10 chars)
+  - Check Serial Number: pos 11-20 (10 chars)
+  - Status Code: pos 21-21 (1 char)
+  - Dollar Amount: pos 22-33 (12 chars, 2 implied decimals)
+  - Paid Date: pos 34-39 (6 chars, MMDDYY format)
+  - Batch and Sequence Number: pos 40-47 (8 chars) — NOT mapped per document
+
+### Engine Limitations Encountered
+- `Divide()` only accepts two Column references — cannot do `Divide(Column4, Hardcode '100')`.
+- `DateReformat()` only supports 8-char formats (MMDDYYYY, YYYYMMDD) — no MMDDYY (6-char) support.
+- `ElseIf` is NOT supported in the If conditional parser — only `If...Then...Else`.
+- `ImpliedDecimal` column in the mapping CSV is for documentation only — the exe does not process it.
+- For fields requiring transformations beyond engine capabilities (implied decimal, MMDDYY dates), output the raw column value and rely on IPA to handle the conversion.
+
+### Mapping Decisions
+- CashManagementGroup: Hardcoded 'SONH' per document default.
+- RunGroup: Hardcoded 'SONH_CBrecon' — IPA constructs the full RunGroup with CashCode and date at runtime.
+- CashLedgerUpdateAction: `If Column3 == 'P' Then '4' Else '6'` — simplified from ElseIf since only P and R values exist.
+- TransactionAmount: Raw Column4 with ImpliedDecimal=2 — IPA handles decimal insertion.
+- ActionDate: Raw Column5 — IPA handles MMDDYY→YYYYMMDD conversion.
+- CashCode: Hardcoded empty — IPA looks up CashCode from CashManagementAccount at runtime.
+- CheckNumber: `RemoveLeadingZeroes(Column2)` per document sample showing "read as 262751".
+
+### File Already in Archive
+- The input docx was already in `/archive/` from a prior session — check before attempting move.
+- PowerShell `Copy-Item` chokes on `+` in filenames — use `-LiteralPath` parameter.
